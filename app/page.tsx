@@ -56,6 +56,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useDraftCache } from '@/lib/hooks/use-draft-cache';
 import { SpeechButton } from '@/components/audio/speech-button';
 import { useImportClassroom } from '@/lib/import/use-import-classroom';
+import { CloudIndicator, CloudSyncPanel } from '@/components/cloud/cloud-sync-panel';
+import { CLOUD_SYNC_ENABLED } from '@/lib/cloud/cloud-config';
 
 const log = createLogger('Home');
 
@@ -438,6 +440,13 @@ function HomePage() {
             <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" />
           </button>
         </div>
+
+        {CLOUD_SYNC_ENABLED && (
+          <>
+            <div className="w-[1px] h-4 bg-gray-200 dark:bg-gray-700" />
+            <CloudIndicator />
+          </>
+        )}
       </div>
       <SettingsDialog
         open={settingsOpen}
@@ -795,6 +804,11 @@ function HomePage() {
             )}
           </AnimatePresence>
         </motion.div>
+      )}
+
+      {/* Cloud Sync Panel (feature-flagged, zero-impact) */}
+      {CLOUD_SYNC_ENABLED && (
+        <CloudSyncPanel onPullSuccess={loadClassrooms} />
       )}
 
       {/* Footer — flows with content, at the very end */}

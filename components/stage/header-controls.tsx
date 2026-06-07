@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Archive,
+  Cloud,
   Download,
   FileDown,
   Loader2,
@@ -19,6 +20,8 @@ import { useStageStore } from '@/lib/store';
 import { useMediaGenerationStore } from '@/lib/store/media-generation';
 import { useExportPPTX } from '@/lib/export/use-export-pptx';
 import { useExportClassroom } from '@/lib/export/use-export-classroom';
+import { CLOUD_SYNC_ENABLED } from '@/lib/cloud/cloud-config';
+import { cloudApi } from '@/lib/cloud/cloud-client';
 import { LanguageSwitcher } from '../language-switcher';
 import { SettingsDialog } from '../settings';
 import {
@@ -28,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import type { StageMode } from '@/lib/types/stage';
 
 interface HeaderControlsProps {
@@ -76,7 +80,8 @@ export function HeaderControls({
   const failedOutlines = useStageStore((s) => s.failedOutlines);
   const mediaTasks = useMediaGenerationStore((s) => s.tasks);
   const { exporting: isExporting, exportPPTX, exportResourcePack } = useExportPPTX();
-  const { exporting: isExportingZip, exportClassroomZip } = useExportClassroom();
+  const { exporting: isExportingZip, exportClassroomZip, exportClassroomZipBlob } = useExportClassroom();
+  const [cloudPushing, setCloudPushing] = useState(false);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
 
@@ -299,6 +304,46 @@ export function HeaderControls({
                 </div>
               </div>
             </button>
+            {CLOUD_SYNC_ENABLED && (
+              <button
+                onClick={async () => {
+                  setExportMenuOpen(false);
+                  setCloudPushing(true);
+                  try {
+                    const result = await exportClassroomZipBlob();
+                    if (!result) {
+                      toast.error('No classroom data to push');
+                      return;
+                    }
+                    const upload = await cloudApi.uploadClassroom(result.blob);
+                    if (upload === 'too_large') {
+                      toast.error('Classroom too large for cloud sync');
+                      return;
+                    }
+                    toast.success(`Pushed "${result.stageName}" to cloud`);
+                  } catch (err: unknown) {
+                    const msg = err instanceof Error ? err.message : 'Push failed';
+                    toast.error(msg);
+                  } finally {
+                    setCloudPushing(false);
+                  }
+                }}
+                disabled={isExportingZip || cloudPushing}
+                className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2.5"
+              >
+                {cloudPushing ? (
+                  <Loader2 className="w-4 h-4 text-blue-500 shrink-0 animate-spin" />
+                ) : (
+                  <Cloud className="w-4 h-4 text-blue-500 shrink-0" />
+                )}
+                <div>
+                  <div>Push to Cloud</div>
+                  <div className="text-[11px] text-gray-400 dark:text-gray-500">
+                    Upload .maic.zip to cloud server
+                  </div>
+                </div>
+              </button>
+            )}
           </div>
         )}
       </div>

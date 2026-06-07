@@ -35,16 +35,24 @@ ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 
+# Optional: cloud sync data directory (overridable via CLOUD_DATA_DIR)
+ENV CLOUD_DATA_DIR=/data/openmaic-cloud
+
 RUN apk add --no-cache libc6-compat cairo pango jpeg giflib librsvg
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
+
+# Create cloud sync data directory with proper ownership
+RUN mkdir -p /data/openmaic-cloud && chown -R nextjs:nodejs /data
 
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
+
+VOLUME ["/data"]
 
 EXPOSE 3000
 

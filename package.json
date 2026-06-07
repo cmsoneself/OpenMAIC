@@ -57,9 +57,11 @@
     "@xyflow/react": "^12.10.0",
     "ai": "^6.0.168",
     "animate.css": "^4.1.1",
+    "better-sqlite3": "^12.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "cookie": "^1.1.1",
     "copilotkit": "^0.0.58",
     "dexie": "^4.2.1",
     "echarts": "^6.0.0",
@@ -124,6 +126,8 @@
     "@rollup/plugin-commonjs": "^28.0.1",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/cookie": "^1.0.0",
     "@types/file-saver": "^2.0.7",
     "@types/katex": "^0.16.8",
     "@types/lodash": "^4.17.23",
@@ -147,6 +151,9 @@
     "ignoredBuiltDependencies": [
       "sharp",
       "unrs-resolver"
+    ],
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
     ]
   },
   "packageManager": "pnpm@10.28.0+sha512.05df71d1421f21399e053fde567cea34d446fa02c76571441bfc1c7956e98e363088982d940465fd34480d4d90a0668bc12362f8aa88000a64e83d0b0e47be48"
