@@ -705,6 +705,8 @@
     "ttsApiKey": "مفتاح API",
     "doubaoAppId": "معرّف التطبيق",
     "doubaoAccessKey": "مفتاح الوصول",
+    "doubaoUseNewConsole": "استخدام وحدة التحكم الجديدة (مفتاح API فقط)",
+    "doubaoUseLegacyConsole": "استخدام وحدة التحكم القديمة (App ID + مفتاح الوصول)",
     "asrProvider": "مزوّد ASR",
     "asrLanguage": "لغة التعرف",
     "asrBaseUrl": "العنوان الأساسي",

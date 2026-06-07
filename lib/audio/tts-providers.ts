@@ -836,29 +836,65 @@ export { getAllTTSProviders, getTTSProvider, getTTSVoices } from './constants';
 
 /**
  * Doubao TTS 2.0 implementation (Volcengine Seed-TTS 2.0)
+ *
+ * Authentication supports two console variants:
+ * 1. **New console** (recommended): single `X-Api-Key` header — user pastes one key.
+ * 2. **Legacy console** (compat): `X-Api-App-Id` + `X-Api-Access-Key` headers — user
+ *    supplies the compound form `"appId:accessKey"`.
+ *
+ * We auto-detect which mode to use based on whether the configured key contains
+ * a colon. Both modes always send `X-Api-Resource-Id: seed-tts-2.0`.
+ *
+ * Endpoint is locked to the v3 unidirectional URL; legacy v1 endpoints are not
+ * supported because Seed-TTS 2.0 voices (`*_uranus_bigtts`) require v3.
  */
 async function generateDoubaoTTS(
   config: TTSModelConfig,
   text: string,
 ): Promise<TTSGenerationResult> {
-  const colonIdx = (config.apiKey || '').indexOf(':');
-  if (colonIdx <= 0) {
+  const rawKey = (config.apiKey || '').trim();
+  if (!rawKey) {
     throw new Error(
-      'Doubao TTS requires API key in format "appId:accessKey". Get both from the Volcengine console.',
+      'Doubao TTS requires an API key. New console: paste the API Key. ' +
+        'Legacy console: use "appId:accessKey" format.',
     );
   }
-  const appId = config.apiKey!.slice(0, colonIdx);
-  const accessKey = config.apiKey!.slice(colonIdx + 1);
 
-  const baseUrl = config.baseUrl || TTS_PROVIDERS['doubao-tts'].defaultBaseUrl;
+  // Detect auth scheme: colon-separated → legacy two-header mode; otherwise → new single-key mode.
+  const colonIdx = rawKey.indexOf(':');
+  const isLegacyAuth = colonIdx > 0;
+  const authHeaders: Record<string, string> = isLegacyAuth
+    ? {
+        'X-Api-App-Id': rawKey.slice(0, colonIdx),
+        'X-Api-Access-Key': rawKey.slice(colonIdx + 1),
+      }
+    : {
+        'X-Api-Key': rawKey,
+      };
+
+  // Normalize base URL: strip trailing slashes and any accidental `/unidirectional`
+  // suffix the user may have pasted in, then enforce the v3 endpoint shape.
+  const DOUBAO_TTS_V3 = 'https://openspeech.bytedance.com/api/v3/tts';
+  let baseUrl = (config.baseUrl || TTS_PROVIDERS['doubao-tts'].defaultBaseUrl || DOUBAO_TTS_V3)
+    .trim()
+    .replace(/\/+$/, '');
+  if (baseUrl.endsWith('/unidirectional')) {
+    baseUrl = baseUrl.slice(0, -'/unidirectional'.length);
+  }
+  if (!/\/api\/v3\/tts$/.test(baseUrl)) {
+    throw new Error(
+      'Doubao TTS 2.0 only supports the v3 endpoint. ' +
+        `Please use ${DOUBAO_TTS_V3} (or leave Base URL empty).`,
+    );
+  }
+
   const speechRate = Math.round(((config.speed || 1.0) - 1.0) * 100);
 
   const response = await fetch(`${baseUrl}/unidirectional`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-Api-App-Id': appId,
-      'X-Api-Access-Key': accessKey,
+      ...authHeaders,
       'X-Api-Resource-Id': 'seed-tts-2.0',
     },
     body: JSON.stringify({

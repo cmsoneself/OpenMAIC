@@ -705,6 +705,8 @@
     "ttsApiKey": "API 密钥",
     "doubaoAppId": "App ID",
     "doubaoAccessKey": "Access Key",
+    "doubaoUseNewConsole": "使用新版控制台（仅需 API Key）",
+    "doubaoUseLegacyConsole": "使用旧版控制台（App ID + Access Key）",
     "asrProvider": "ASR 提供商",
     "asrLanguage": "识别语言",
     "asrBaseUrl": "Base URL",

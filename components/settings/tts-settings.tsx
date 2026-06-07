@@ -112,17 +112,24 @@ export function TTSSettings({ selectedProviderId }: TTSSettingsProps) {
   const [testMessage, setTestMessage] = useState('');
   const { previewing: testingTTS, startPreview, stopPreview } = useTTSPreview();
 
-  // Doubao TTS uses compound "appId:accessKey" — split for separate UI fields
+  // Doubao TTS 2.0 supports two console variants:
+  //   - New console (recommended): a single API Key (X-Api-Key header).
+  //   - Legacy console (compat):   "appId:accessKey" compound (X-Api-App-Id + X-Api-Access-Key).
+  // We auto-detect by the presence of a colon in the stored apiKey, and let the
+  // user toggle manually to disambiguate (e.g. when the key starts empty).
   const isDoubao = selectedProviderId === 'doubao-tts';
   const rawApiKey = ttsProvidersConfig[selectedProviderId]?.apiKey || '';
   const doubaoColonIdx = rawApiKey.indexOf(':');
-  const doubaoAppId = isDoubao && doubaoColonIdx > 0 ? rawApiKey.slice(0, doubaoColonIdx) : '';
-  const doubaoAccessKey =
-    isDoubao && doubaoColonIdx > 0
-      ? rawApiKey.slice(doubaoColonIdx + 1)
-      : isDoubao
-        ? rawApiKey
-        : '';
+  const doubaoHasLegacyKey = isDoubao && doubaoColonIdx > 0;
+  const [doubaoLegacyMode, setDoubaoLegacyMode] = useState(doubaoHasLegacyKey);
+
+  // If the stored key changes (e.g. provider switch, import), re-sync the mode.
+  useEffect(() => {
+    if (isDoubao) setDoubaoLegacyMode(doubaoHasLegacyKey);
+  }, [isDoubao, doubaoHasLegacyKey, selectedProviderId]);
+
+  const doubaoAppId = doubaoHasLegacyKey ? rawApiKey.slice(0, doubaoColonIdx) : '';
+  const doubaoAccessKey = doubaoHasLegacyKey ? rawApiKey.slice(doubaoColonIdx + 1) : '';
 
   const setDoubaoCompoundKey = (appId: string, accessKey: string) => {
     const combined = appId && accessKey ? `${appId}:${accessKey}` : appId || accessKey;
@@ -329,22 +336,118 @@ export function TTSSettings({ selectedProviderId }: TTSSettingsProps) {
           </div>
         ) : (
           <>
-            <div className={cn('grid gap-4', isDoubao ? 'grid-cols-3' : 'grid-cols-2')}>
+            <div
+              className={cn(
+                'grid gap-4',
+                isDoubao && doubaoLegacyMode ? 'grid-cols-3' : 'grid-cols-2',
+              )}
+            >
               {isDoubao ? (
-                <>
+                doubaoLegacyMode ? (
+                  <>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-sm">{t('settings.doubaoAppId')}</Label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Switch to new-console mode; clear legacy compound so the
+                            // single-key field starts blank instead of inheriting "appId".
+                            setTTSProviderConfig(selectedProviderId, { apiKey: '' });
+                            setDoubaoLegacyMode(false);
+                          }}
+                          className="text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                        >
+                          {t('settings.doubaoUseNewConsole')}
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          name={`tts-app-id-${selectedProviderId}`}
+                          type={showApiKey ? 'text' : 'password'}
+                          autoComplete="new-password"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          placeholder={t('settings.enterApiKey')}
+                          value={doubaoAppId}
+                          onChange={(e) => setDoubaoCompoundKey(e.target.value, doubaoAccessKey)}
+                          className="font-mono text-sm pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowApiKey(!showApiKey)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          {showApiKey ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm">{t('settings.doubaoAccessKey')}</Label>
+                      <div className="relative">
+                        <Input
+                          name={`tts-access-key-${selectedProviderId}`}
+                          type={showApiKey ? 'text' : 'password'}
+                          autoComplete="new-password"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          placeholder={t('settings.enterApiKey')}
+                          value={doubaoAccessKey}
+                          onChange={(e) => setDoubaoCompoundKey(doubaoAppId, e.target.value)}
+                          className="font-mono text-sm pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowApiKey(!showApiKey)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        >
+                          {showApiKey ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
                   <div className="space-y-2">
-                    <Label className="text-sm">{t('settings.doubaoAppId')}</Label>
+                    <div className="flex items-center justify-between gap-2">
+                      <Label className="text-sm">{t('settings.ttsApiKey')}</Label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          // Switch to legacy mode; clear any single-key value first to
+                          // avoid mistakenly interpreting it as appId.
+                          setTTSProviderConfig(selectedProviderId, { apiKey: '' });
+                          setDoubaoLegacyMode(true);
+                        }}
+                        className="text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+                      >
+                        {t('settings.doubaoUseLegacyConsole')}
+                      </button>
+                    </div>
                     <div className="relative">
                       <Input
-                        name={`tts-app-id-${selectedProviderId}`}
+                        name={`tts-api-key-${selectedProviderId}`}
                         type={showApiKey ? 'text' : 'password'}
                         autoComplete="new-password"
                         autoCapitalize="none"
                         autoCorrect="off"
                         spellCheck={false}
                         placeholder={t('settings.enterApiKey')}
-                        value={doubaoAppId}
-                        onChange={(e) => setDoubaoCompoundKey(e.target.value, doubaoAccessKey)}
+                        value={rawApiKey}
+                        onChange={(e) =>
+                          setTTSProviderConfig(selectedProviderId, {
+                            apiKey: e.target.value.trim(),
+                          })
+                        }
                         className="font-mono text-sm pr-10"
                       />
                       <button
@@ -352,35 +455,15 @@ export function TTSSettings({ selectedProviderId }: TTSSettingsProps) {
                         onClick={() => setShowApiKey(!showApiKey)}
                         className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       >
-                        {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showApiKey ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
                       </button>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm">{t('settings.doubaoAccessKey')}</Label>
-                    <div className="relative">
-                      <Input
-                        name={`tts-access-key-${selectedProviderId}`}
-                        type={showApiKey ? 'text' : 'password'}
-                        autoComplete="new-password"
-                        autoCapitalize="none"
-                        autoCorrect="off"
-                        spellCheck={false}
-                        placeholder={t('settings.enterApiKey')}
-                        value={doubaoAccessKey}
-                        onChange={(e) => setDoubaoCompoundKey(doubaoAppId, e.target.value)}
-                        className="font-mono text-sm pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowApiKey(!showApiKey)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      >
-                        {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                  </div>
-                </>
+                )
               ) : (
                 <div className="space-y-2">
                   <Label className="text-sm">{t('settings.ttsApiKey')}</Label>

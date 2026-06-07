@@ -705,6 +705,8 @@
     "ttsApiKey": "API-ключ",
     "doubaoAppId": "App ID",
     "doubaoAccessKey": "Access Key",
+    "doubaoUseNewConsole": "Новая консоль (только API Key)",
+    "doubaoUseLegacyConsole": "Старая консоль (App ID + Access Key)",
     "asrProvider": "Провайдер ASR",
     "asrLanguage": "Язык распознавания",
     "asrBaseUrl": "Base URL",
