@@ -1,12 +1,12 @@
 # dependencies
 node_modules
+**/node_modules
 .pnpm-store
 
 # build output
 .next
 out
 build
-dist
 
 # git
 .git
@@ -23,6 +23,9 @@ server-providers*.yml
 
 # misc
 assets
+
+# cloud sync local data
+.cloud-data
 *.md
 *.pdf
 *.pem
@@ -33,3 +36,12 @@ logs
 data
 docs
 .claude
+
+packages/mathml2omml/dist
+packages/pptxgenjs/dist
+e2e
+tests
+scripts
+eval
+
+packages

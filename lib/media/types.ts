@@ -78,7 +78,8 @@ export type ImageProviderId =
   | 'nano-banana'
   | 'minimax-image'
   | 'grok-image'
-  | 'lemonade';
+  | 'lemonade'
+  | 'agnes-image';
 // Add new image providers below (uncomment and modify):
 // | 'dall-e'
 // | 'midjourney'

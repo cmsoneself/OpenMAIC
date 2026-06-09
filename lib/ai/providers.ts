@@ -1101,6 +1101,45 @@ export const PROVIDERS: Record<ProviderId, ProviderConfig> = {
       },
     ],
   },
+
+  agnes: {
+    id: 'agnes',
+    name: 'Agnes AI',
+    type: 'openai',
+    defaultBaseUrl: 'https://apihub.agnes-ai.com/v1',
+    requiresApiKey: true,
+    icon: '/logos/agnes.svg',
+    models: [
+      {
+        id: 'Agnes-1.5-Flash',
+        name: 'Agnes 1.5 Flash',
+        contextWindow: 256000,
+        outputWindow: 65536,
+        capabilities: {
+          streaming: true,
+          tools: true,
+          vision: false,
+          thinking: { toggleable: false, budgetAdjustable: false, defaultEnabled: false },
+        },
+      },
+      {
+        id: 'Agnes-2.0-Flash',
+        name: 'Agnes 2.0 Flash',
+        contextWindow: 1000000,
+        outputWindow: 8192,
+        capabilities: {
+          streaming: true,
+          tools: true,
+          vision: true,
+          thinking: {
+            toggleable: true,
+            budgetAdjustable: true,
+            defaultEnabled: false,
+          },
+        },
+      },
+    ],
+  },
 };
 
 applyModelMetadata(PROVIDERS);

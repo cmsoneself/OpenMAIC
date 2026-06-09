@@ -57,13 +57,11 @@ export async function GET(req: Request, ctx: RouteContext) {
   // the HTTP header (ByteString constraint). Provide ASCII fallback too.
   const encodedFilename = encodeURIComponent(filename);
 
-  // Convert Node Buffer -> Uint8Array for the Web Response body
-  // to keep Next.js / Edge runtime types happy.
-  const body = new Uint8Array(
-    result.data.buffer,
-    result.data.byteOffset,
-    result.data.byteLength,
-  );
+  // Wrap Node Buffer in a Blob — copy into a plain Uint8Array to satisfy
+  // Next.js 16 strict BodyInit type checking (Buffer / ArrayBufferLike
+  // are not accepted by BlobPart in DOM typings).
+  const uint8 = new Uint8Array(result.data);
+  const body = new Blob([uint8], { type: "application/zip" });
   return new NextResponse(body, {
     status: 200,
     headers: {

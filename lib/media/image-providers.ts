@@ -25,6 +25,10 @@ import {
   generateWithLemonadeImage,
   testLemonadeImageConnectivity,
 } from './adapters/lemonade-image-adapter';
+import {
+  generateWithAgnesImage,
+  testAgnesImageConnectivity,
+} from './adapters/agnes-image-adapter';
 
 export const IMAGE_PROVIDERS: Record<ImageProviderId, ImageProviderConfig> = {
   seedream: {
@@ -133,6 +137,19 @@ export const IMAGE_PROVIDERS: Record<ImageProviderId, ImageProviderConfig> = {
     supportedAspectRatios: ['16:9', '4:3', '1:1', '9:16'],
     maxResolution: { width: 1024, height: 1024 },
   },
+
+  'agnes-image': {
+    id: 'agnes-image',
+    name: 'Agnes Image',
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://apihub.agnes-ai.com/v1',
+    icon: '/logos/agnes.svg',
+    models: [
+      { id: 'agnes-image-2.0-flash', name: 'Agnes Image 2.0 Flash' },
+      { id: 'agnes-image-2.1-flash', name: 'Agnes Image 2.1 Flash' },
+    ],
+    supportedAspectRatios: ['16:9', '4:3', '1:1', '9:16'],
+  },
 };
 
 export async function testImageConnectivity(
@@ -153,6 +170,8 @@ export async function testImageConnectivity(
       return testGrokImageConnectivity(config);
     case 'lemonade':
       return testLemonadeImageConnectivity(config);
+    case 'agnes-image':
+      return testAgnesImageConnectivity(config);
     default:
       return {
         success: false,
@@ -180,6 +199,8 @@ export async function generateImage(
       return generateWithGrokImage(config, options);
     case 'lemonade':
       return generateWithLemonadeImage(config, options);
+    case 'agnes-image':
+      return generateWithAgnesImage(config, options);
     default:
       throw new Error(`Unsupported image provider: ${config.providerId}`);
   }

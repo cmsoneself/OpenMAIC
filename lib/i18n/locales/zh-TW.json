@@ -555,7 +555,8 @@
       "tavily": "Tavily",
       "bocha": "Bocha",
       "brave": "Brave Search",
-      "baidu": "Baidu"
+      "baidu": "Baidu",
+      "agnes": "Agnes AI"
     },
     "providerTypes": {
       "openai": "OpenAI 協定",
@@ -934,6 +935,7 @@
     "providerMiniMaxImage": "MiniMax 圖像",
     "providerLemonadeImage": "Lemonade 圖像（本機）",
     "providerGrokImage": "Grok Image（xAI）",
+    "providerAgnesImage": "Agnes Image",
     "testImageGeneration": "測試圖像生成",
     "testImageConnectivity": "測試連線",
     "imageConnectivitySuccess": "圖像服務連線成功",

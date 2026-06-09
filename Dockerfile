@@ -9,6 +9,9 @@ WORKDIR /app
 # ---- Stage 2: Dependencies ----
 FROM base AS deps
 
+ARG PNPM_REGISTRY
+RUN if [ -n "$PNPM_REGISTRY" ]; then pnpm config set registry "$PNPM_REGISTRY"; fi
+
 # Native build tools for sharp, @napi-rs/canvas
 RUN apk add --no-cache python3 build-base g++ cairo-dev pango-dev jpeg-dev giflib-dev librsvg-dev
 
